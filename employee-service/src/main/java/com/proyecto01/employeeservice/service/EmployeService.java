@@ -29,12 +29,14 @@ public class EmployeService {
 
     /*Recupera Empleado con su Depto por Id*/
     public ResponseDTO getEmployeDeptoById(Long id) {
-        ResponseDTO responseDTO = new ResponseDTO();
         Employee employee = new Employee();
+        ResponseDTO responseDTO = new ResponseDTO();
+        EmployeeDTO employeeDTO = new EmployeeDTO();
         DepartamentDTO departamentDTO = new DepartamentDTO();
 
         /*Obtención del empleado*/
         employee = employeRepository.findById(id).get();
+        employeeDTO = EmployeeMapper.toDTO(employee);
 
         /*Obtenemos depto desde el servicio de departamentos*/
         ResponseEntity<DepartamentDTO> responseEntity =
@@ -44,7 +46,7 @@ public class EmployeService {
         departamentDTO = responseEntity.getBody();
 
         /*Cargamos respuesta final completa*/
-        responseDTO.setEmployee(employee);
+        responseDTO.setEmployeeDTO(employeeDTO);
         responseDTO.setDepartamentDTO(departamentDTO);
 
         /*Retornamos respuesta final*/
@@ -52,7 +54,7 @@ public class EmployeService {
     }
 
     /*Recupera Lista de Empleados usando filtros*/
-    public List<EmployeeDTO> buscarEmployees (Long departamentId) {
+    public List<EmployeeDTO> buscarEmployees (Long departamentId, String lastName) {
 
         //Se construye la consulta dinámica
         //Se inicializa con una especificacion que siempre es verdadera
@@ -61,8 +63,13 @@ public class EmployeService {
         //Specification<Employee> spec = Specification.where(null);
         Specification<Employee> spec = Specification.unrestricted();
 
+        //Agregamos filtro por departamento
         if (departamentId != null) {
             spec = spec.and(EmployeeSpecs.tieneDepartamentId(departamentId));
+        }
+        //Agregamos filtro por apellido
+        if (lastName != null && !lastName.trim().isEmpty()) {
+            spec = spec.and(EmployeeSpecs.tieneLastName(lastName));
         }
 
         //Se ejecuta la consulta en el repositorio

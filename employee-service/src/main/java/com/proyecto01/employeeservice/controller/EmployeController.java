@@ -29,11 +29,12 @@ public class EmployeController {
     /*Recuperar Lista de Empleados usando filtros*/
     @GetMapping
     public ResponseEntity<List<EmployeeDTO>> buscarEmployees (
-                @RequestParam(required = false) Long departamentId
+                @RequestParam(required = false) Long departamentId,
+                @RequestParam(required = false) String lastName
             ) {
 
         //Buscamos empleados con metodo del Servicio
-        List<EmployeeDTO> employeesDTO = employeService.buscarEmployees(departamentId);
+        List<EmployeeDTO> employeesDTO = employeService.buscarEmployees(departamentId, lastName);
 
         //Verificacion Lista vacia
         if (employeesDTO.isEmpty()) {
