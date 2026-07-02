@@ -5,10 +5,9 @@ import com.proyecto01.employeeservice.dto.EmployeeDTO;
 import com.proyecto01.employeeservice.dto.ResponseDTO;
 import com.proyecto01.employeeservice.entity.Employee;
 import com.proyecto01.employeeservice.mapper.EmployeeMapper;
-import com.proyecto01.employeeservice.repository.EmployeRepository;
+import com.proyecto01.employeeservice.repository.EmployeeRepository;
 import com.proyecto01.employeeservice.repository.EmployeeSpecs;
 import lombok.AllArgsConstructor;
-import org.springframework.data.jpa.domain.PredicateSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,23 +18,23 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class EmployeService {
-    private final EmployeRepository employeRepository;
+public class EmployeeService {
+    private final EmployeeRepository employeeRepository;
     private final RestTemplate restTemplate;
 
-    public Employee saveEmploye(Employee employee) {
-        return employeRepository.save(employee);
+    public Employee saveEmployee(Employee employee) {
+        return employeeRepository.save(employee);
     }
 
     /*Recupera Empleado con su Depto por Id*/
-    public ResponseDTO getEmployeDeptoById(Long id) {
+    public ResponseDTO getEmployeeDeptoById(Long id) {
         Employee employee = new Employee();
         ResponseDTO responseDTO = new ResponseDTO();
         EmployeeDTO employeeDTO = new EmployeeDTO();
         DepartamentDTO departamentDTO = new DepartamentDTO();
 
         /*Obtención del empleado*/
-        employee = employeRepository.findById(id).get();
+        employee = employeeRepository.findById(id).get();
         employeeDTO = EmployeeMapper.toDTO(employee);
 
         /*Obtenemos depto desde el servicio de departamentos*/
@@ -54,7 +53,7 @@ public class EmployeService {
     }
 
     /*Recupera Lista de Empleados usando filtros*/
-    public List<EmployeeDTO> buscarEmployees (Long departamentId, String lastName) {
+    public List<EmployeeDTO> findEmployees (Long departamentId, String lastName) {
 
         //Se construye la consulta dinámica
         //Se inicializa con una especificacion que siempre es verdadera
@@ -73,11 +72,38 @@ public class EmployeService {
         }
 
         //Se ejecuta la consulta en el repositorio
-        List<Employee> employees = employeRepository.findAll(spec);
+        List<Employee> employees = employeeRepository.findAll(spec);
 
         //Se mapea a DTO para proteger la entidad
         return employees.stream()
                 .map(EmployeeMapper::toDTO)
                 .collect(Collectors.toList());
     }
+
+    /*Elimina Empleado*/
+    public void deleteEmployeeById(Long id) {
+        //Verificamos si existe, sino lanzamos excepcion
+        if (!employeeRepository.existsById(id)) {
+            throw new RuntimeException("Empleado no encontrado con Id:"+id);
+        }
+        //Todo ok, eliminamos
+        employeeRepository.deleteById(id);
+    }
+
+    //Actualizacion datos Empleado
+    public Employee updateEmployeeById(Long id, EmployeeDTO employeeDTO) {
+        //Verificamos si existe, sino lanzamos excepcion
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Empleado no encontrado con Id:"+id));
+
+        //Todo ok, recargamos nuevos valores
+        employee.setFirsName(employeeDTO.getFirsName());
+        employee.setLastName(employeeDTO.getLastName());
+        employee.setEmail(employeeDTO.getEmail());
+        employee.setDepartamentId(employeeDTO.getDepartamentId());
+
+        //Regrabamos
+        return employeeRepository.save(employee);
+    }
+
 }
